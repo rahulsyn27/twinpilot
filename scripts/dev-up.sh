@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-docker compose up --build
+docker compose -f infrastructure/docker-compose.yml up --build

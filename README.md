@@ -11,7 +11,7 @@ TwinPilot is a monorepo foundation for a production-grade autonomous AI engineer
 ## Quick start
 
 ```bash
-docker compose up --build
+docker compose -f infrastructure/docker-compose.yml up --build
 ```
 
 Services:
