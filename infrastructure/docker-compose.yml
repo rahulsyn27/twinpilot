@@ -1,92 +1,45 @@
 services:
-  api:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
-    working_dir: /workspace/backend
-    command: >
-      sh -c "
-      uv sync --no-dev &&
-      uv run uvicorn app.main:app
-      --host 0.0.0.0
-      --port 8000
-      --reload
-      --reload-dir /workspace/backend/app
-      "
-    environment:
-      APP_ENV: development
-      APP_NAME: TwinPilot API
-      LOG_LEVEL: INFO
-      CORS_ORIGINS: '["http://localhost:3000"]'
-      DATABASE_URL: postgresql+asyncpg://twinpilot:twinpilot@postgres:5432/twinpilot
-      REDIS_URL: redis://redis:6379/0
-      QDRANT_URL: http://qdrant:6333
-      PYTHONPATH: /workspace/backend
-    volumes:
-      - ..:/workspace
-      - api_venv:/workspace/backend/.venv
-    ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-      qdrant:
-        condition: service_started
-
-  frontend:
-    build:
-      context: ..
-      dockerfile: frontend/Dockerfile
-    working_dir: /workspace/frontend
-    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0 --port 3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
-      CHOKIDAR_USEPOLLING: "1"
-    volumes:
-      - ..:/workspace
-      - frontend_node_modules:/workspace/frontend/node_modules
-    ports:
-      - "3000:3000"
-    depends_on:
-      api:
-        condition: service_started
-
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16
+
+    container_name: twinpilot-postgres
+
+    restart: unless-stopped
+
     environment:
       POSTGRES_DB: twinpilot
-      POSTGRES_USER: twinpilot
-      POSTGRES_PASSWORD: twinpilot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
     ports:
       - "5432:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U twinpilot -d twinpilot"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   redis:
     image: redis:7-alpine
+
+    container_name: twinpilot-redis
+
+    restart: unless-stopped
+
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
 
   qdrant:
-    image: qdrant/qdrant:v1.13.2
+    image: qdrant/qdrant:latest
+
+    container_name: twinpilot-qdrant
+
+    restart: unless-stopped
+
     ports:
       - "6333:6333"
-      - "6334:6334"
+
     volumes:
       - qdrant_data:/qdrant/storage
 
 volumes:
-  api_venv:
-  frontend_node_modules:
   postgres_data:
-  redis_data:
   qdrant_data:

@@ -1,1 +1,7 @@
-"""Version 1 API module."""
+from fastapi import APIRouter
+
+from app.api.v1.projects import router as project_router
+
+api_router = APIRouter()
+
+api_router.include_router(project_router)

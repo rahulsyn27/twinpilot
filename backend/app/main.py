@@ -1,27 +1,48 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.router import router as v1_router
-from app.core.config.settings import get_settings
-from app.core.lifespan import lifespan
-from app.middleware.error_handler import ErrorHandlingMiddleware
+from app.core.config import settings
+from app.core.logging import configure_logging
+from app.core.qdrant import close_qdrant, init_qdrant
+from app.core.redis import close_redis, init_redis
+from app.middleware.logging import LoggingMiddleware
 
-settings = get_settings()
+from app.api.v1 import api_router
+
+configure_logging()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_redis()
+    await init_qdrant()
+
+    yield
+
+    await close_redis()
+    await close_qdrant()
+
 
 app = FastAPI(
-    title=settings.app_name,
-    description="TwinPilot backend API foundation",
-    version="1.0.0",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description=settings.APP_DESCRIPTION,
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-app.add_middleware(ErrorHandlingMiddleware)
+app.add_middleware(LoggingMiddleware)
 
-app.include_router(v1_router, prefix=settings.api_v1_prefix)
+
+@app.get("/")
+async def root():
+    return {
+        "name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+    }
+
+app.include_router(
+    api_router,
+    prefix=settings.API_V1_PREFIX,
+)

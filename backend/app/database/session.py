@@ -1,33 +1,31 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
 
-_engine: AsyncEngine | None = None
-_session_factory: async_sessionmaker[AsyncSession] | None = None
+from app.core.config import settings
+
+engine = create_async_engine(
+    settings.ASYNC_DATABASE_URL,
+    echo=settings.DEBUG,
+    future=True,
+    pool_pre_ping=True,
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    autoflush=False,
+    expire_on_commit=False,
+)
 
 
-async def init_database(database_url: str) -> None:
-    global _engine, _session_factory
-    _engine = create_async_engine(database_url, pool_pre_ping=True)
-    _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
-
-
-async def close_database() -> None:
-    global _engine, _session_factory
-    if _engine is not None:
-        await _engine.dispose()
-    _engine = None
-    _session_factory = None
-
-
-async def get_db_session() -> AsyncIterator[AsyncSession]:
-    if _session_factory is None:
-        raise RuntimeError("Database session factory has not been initialized.")
-
-    async with _session_factory() as session:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """
+    FastAPI dependency for database sessions.
+    """
+    async with AsyncSessionLocal() as session:
         yield session
