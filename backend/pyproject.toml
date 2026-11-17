@@ -31,8 +31,14 @@ dependencies = [
     "GitPython>=3.1.45",
     # MCP
     "mcp>=1.12.3",
-    # LLM
-    "litellm>=1.74.9",
+    # RAG and evaluation
+    "langchain-core>=0.3.0",
+    "langchain-groq>=0.3.0",
+    "sentence-transformers>=3.4.0",
+    "numpy>=2.2.0",
+    # Giskard's current Checks framework for groundedness and custom RAG checks.
+    "giskard-checks==1.0.2b5",
+    "giskard-agents==1.0.2b5",
     # Validation
     "email-validator>=2.2.0",
     "greenlet>=3.5.4",
@@ -71,6 +77,9 @@ select = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.uv]
+prerelease = "allow"
 
 [tool.mypy]
 python_version = "3.13"

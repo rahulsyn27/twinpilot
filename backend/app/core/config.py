@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=Path(__file__).resolve().parents[3] / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -36,6 +37,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     API_V1_PREFIX: str = "/api/v1"
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
     # -------------------------------------------------------------------------
     # Security
@@ -109,9 +111,9 @@ class Settings(BaseSettings):
     # -------------------------------------------------------------------------
     # LLM
     # -------------------------------------------------------------------------
-    OPENAI_API_KEY: str = ""
-
-    DEFAULT_MODEL: str = "gpt-4.1"
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # -------------------------------------------------------------------------
     # GitHub

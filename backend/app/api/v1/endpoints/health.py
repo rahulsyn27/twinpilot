@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from app.core.config.settings import Settings
-from app.dependencies import get_settings_dependency
+from app.core.config import settings
 from app.schemas.health import HealthResponse
 
 router = APIRouter(tags=["health"])
 
 
 @router.get("/health", response_model=HealthResponse)
-async def healthcheck(settings: Settings = Depends(get_settings_dependency)) -> HealthResponse:
-    return HealthResponse(status="ok", service=settings.app_name, api_version="v1")
+async def healthcheck() -> HealthResponse:
+    return HealthResponse(status="ok", service=settings.APP_NAME, api_version="v1")
